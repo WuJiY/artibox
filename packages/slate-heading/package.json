@@ -30,15 +30,13 @@
     "@artibox/slate-common": "^0.2.0",
     "@artibox/slate-jsx-serializer": "^0.2.0",
     "@types/is-hotkey": "^0.1.1",
-    "@types/react": "^16.9.15",
-    "@types/slate": "^0.47.5",
-    "@types/slate-react": "^0.22.9",
+    "@types/react": "^16.9.29",
     "is-hotkey": "^0.1.6",
-    "tslib": "^1.10.0"
+    "tslib": "^1.11.1"
   },
   "peerDependencies": {
     "react": "^16.8.6",
-    "slate": "^0.47.0",
-    "slate-react": "^0.22.0"
+    "slate": "^0.50.0",
+    "slate-react": "^0.50.0"
   }
 }
