@@ -1,5 +1,5 @@
 import { Editor } from 'slate';
-import { NodeType } from '@artibox/slate-common';
+import type { MarkKey } from '@artibox/slate-common';
 
 export interface ToggleMarkController {
   /**
@@ -9,26 +9,30 @@ export interface ToggleMarkController {
   /**
    * Add mark of the specific type on the current seleciton.
    */
-  add(editor: Editor): Editor;
+  add(editor: Editor): void;
   /**
    * Remove marks matching the specific type in the current selection.
    */
-  remove(editor: Editor): Editor;
+  remove(editor: Editor): void;
   /**
    * Toggle marks matching the specific type in the current selection.
    */
-  toggle(editor: Editor): Editor;
+  toggle(editor: Editor): void;
 }
 
-export type CreateToggleMarkContrllerConfig = NodeType;
-
-export function createToggleMarkController(config: CreateToggleMarkContrllerConfig): ToggleMarkController {
-  const { type } = config;
+export function createToggleMarkController(key: MarkKey) {
+  const isSelectionIn: ToggleMarkController['isSelectionIn'] = editor => {
+    const marks = Editor.marks(editor);
+    return marks ? marks[key] === true : false;
+  };
+  const add: ToggleMarkController['add'] = editor => Editor.addMark(editor, key, true);
+  const remove: ToggleMarkController['remove'] = editor => Editor.removeMark(editor, key);
+  const toggle: ToggleMarkController['toggle'] = editor => (isSelectionIn(editor) ? remove : add)(editor);
 
   return {
-    isSelectionIn: editor => editor.value.activeMarks.some(mark => mark?.type === type),
-    add: editor => editor.addMark(type),
-    remove: editor => editor.removeMark(type),
-    toggle: editor => editor.toggleMark(type)
+    isSelectionIn,
+    add,
+    remove,
+    toggle
   };
 }

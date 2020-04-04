@@ -1,14 +1,13 @@
-import React, { useRef, useLayoutEffect, useState } from 'react';
-import cx from 'classnames';
-import { WithEditor, InputConfig } from '@artibox/slate-common';
+import React, { useRef, useLayoutEffect, useState, ReactNode } from 'react';
+import { Range, Editor } from 'slate';
+import { useSlate, ReactEditor } from 'slate-react';
+import clsx from 'clsx';
+import { ElementType } from '@artibox/slate-common';
+import type { InputConfig } from '@artibox/slate-react';
 import { useTheme } from '@artibox/components/theme';
 import Portal from '@artibox/components/Portal';
-import { TOOLBAR_DIVIDER } from '../constants';
-import { Tool, WithTools } from '../typings';
-import Divider from './divider';
-import ToolbarIcon from './toolbar-icon';
 import ToolbarInput from './toolbar-input';
-import { clsPrefix } from './constants';
+import '../styles';
 
 function roundNumber(value: number, min: number, max: number) {
   if (value < min) {
@@ -38,31 +37,34 @@ function calculatePosition(el: HTMLElement) {
   return { top, left };
 }
 
-export type ToolbarProps = WithEditor & WithTools;
+interface ToolbarInnerProps {
+  editor: ReactEditor;
+  renderCollapsed?: () => ReactNode;
+  renderExpanded?: () => ReactNode;
+  selection: Range;
+}
 
-function Toolbar({ collapsedTools, expandedTools, editor }: ToolbarProps) {
+function ToolbarInner({ editor, renderCollapsed, renderExpanded, selection }: ToolbarInnerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  const [toolInput, setToolInput] = useState<InputConfig | null>(null);
-  const { fragment, selection } = editor.value;
-  const { isFocused, isExpanded } = selection;
-  const focusTextEmpty = fragment.text === '';
+  const [toolInput, setToolInput] = useState<InputConfig | undefined>();
+  const focusTextEmpty = Editor.string(editor, selection) === '';
   /**
    * If the tool input process start, the editor will be blurred so that toolbar will hide.
    * To avoid this issue, add `|| toolInput` to the condition.
    */
-  const expanded = !!(((isExpanded && isFocused) || toolInput) && !focusTextEmpty && expandedTools);
-  const collapsed = !!(((!isExpanded && isFocused) || toolInput) && collapsedTools);
-  let tools: Tool[] | undefined;
+  const isExpanded = !!(renderExpanded && !focusTextEmpty && (toolInput || Range.isExpanded(selection)));
+  const isCollapsed = !!(renderCollapsed && (toolInput || !isExpanded));
+  let render: (() => ReactNode) | undefined;
 
-  if (expanded) {
-    tools = expandedTools;
-  } else if (collapsed) {
-    tools = collapsedTools;
+  if (isExpanded) {
+    render = renderExpanded;
+  } else if (isCollapsed) {
+    render = renderCollapsed;
   }
 
   useLayoutEffect(() => {
-    if (!isFocused || toolInput) {
+    if (!ReactEditor.isFocused(editor) || toolInput) {
       return;
     }
 
@@ -79,39 +81,60 @@ function Toolbar({ collapsedTools, expandedTools, editor }: ToolbarProps) {
       el.style.left = `${left}px`;
     }
 
-    if (expanded) {
-      handler();
-    } else {
-      /**
-       * While this effect fired, the native selection is not synchronize sometimes.
-       * To avoid the issue, we just invoke the handler on next frame.
-       */
-      window.requestAnimationFrame(handler);
-    }
+    /**
+     * While this effect fired, the native selection is not synchronized to the latest.
+     * To avoid the issue, we just invoke the handler on next frame.
+     */
+    window.requestAnimationFrame(handler);
   });
 
-  if (!tools) {
+  if (!render) {
     return null;
   }
 
   return (
     <Portal>
-      <div ref={ref} className={cx(`${clsPrefix}__wrapper`, theme)}>
-        <div className={`${clsPrefix}__arrow`} />
-        <div className={clsPrefix}>
-          {tools.map((tool, index) => {
-            if (tool === TOOLBAR_DIVIDER) {
-              return <Divider key={index} />;
-            }
-
-            const { icon, hook } = tool;
-
-            return <ToolbarIcon key={icon.name} icon={icon} hook={hook} editor={editor} setToolInput={setToolInput} />;
-          })}
+      <div ref={ref} className={clsx('artibox-toolbar__wrapper', theme)} onMouseDown={event => event.preventDefault()}>
+        <div className="artibox-toolbar__arrow" />
+        <div className="artibox-toolbar">
+          {render()}
           {toolInput && <ToolbarInput editor={editor} toolInput={toolInput} setToolInput={setToolInput} />}
         </div>
       </div>
     </Portal>
+  );
+}
+
+export interface ToolbarProps extends Omit<ToolbarInnerProps, 'editor' | 'selection'> {
+  /**
+   * The blacklist of elements.
+   * If some elements in the current selection are in the blacklist, toolbar will be hided.
+   */
+  disabledElement?: ElementType[];
+}
+
+function Toolbar(props: ToolbarProps) {
+  const { disabledElement, renderCollapsed, renderExpanded } = props;
+  const editor = useSlate();
+  const { selection } = editor;
+
+  if (
+    !selection ||
+    (disabledElement &&
+      Editor.fragment(editor, selection).some(
+        descendant => 'children' in descendant && disabledElement.includes(descendant.type)
+      ))
+  ) {
+    return null;
+  }
+
+  return (
+    <ToolbarInner
+      editor={editor}
+      renderCollapsed={renderCollapsed}
+      renderExpanded={renderExpanded}
+      selection={selection}
+    />
   );
 }
 

@@ -1,69 +1,90 @@
-import { Editor, Block } from 'slate';
-import { NodeType } from '@artibox/slate-common';
+import { Node, Element, Editor, Transforms } from 'slate';
+import type { ElementType } from '@artibox/slate-common';
+import { ArtiboxEditor } from '@artibox/slate-common/editor';
+import type { BlockquoteElement } from './typings';
 
 export interface BlockquoteController {
   /**
-   * To check if the block is blockquote.
+   * Check if the elment is blockquote.
    */
-  isBlockAs(block?: Block | null): boolean;
+  isNodeAs(node?: Node | null): node is Element;
   /**
-   * To check if the current selection is in blockquote.
+   * Check if the current selection is in blockquote.
    */
   isSelectionIn(editor: Editor): boolean;
   /**
-   * If the current block is blockquote or wrapped by blockquote, return the blockquote, or null.
+   * Get the closest element which is blockquote, or null.
    */
-  getCurrent(editor: Editor): Block | null;
+  getClosest(editor: Editor): Element | null;
   /**
-   * To wrap the current block with blockquote block.
+   * Wrap paragraph elements in selection with blockquote elment.
    */
-  wrap(editor: Editor): Editor;
+  wrap(editor: Editor): void;
   /**
-   * To unwrap the current blockquote block if it is.
+   * Unwrap the closest blockquote elment if there is.
    */
-  unwrap(editor: Editor): Editor;
+  unwrap(editor: Editor): void;
   /**
-   * To toggle the blockquote block.
+   * Unwrap paragraph elements in selection.
    */
-  toggle(editor: Editor): Editor;
+  unwrapOnlySelection(editor: Editor): void;
+  /**
+   * To toggle the blockquote elment.
+   */
+  toggle(editor: Editor): void;
 }
 
-export type CreateBlockquoteControllerConfig = NodeType;
+export function createBlockquoteController(type: ElementType): BlockquoteController {
+  const isNodeAs: BlockquoteController['isNodeAs'] = (node?: Node | null): node is Element =>
+    node ? Element.isElement(node) && node.type === type : false;
+  const getClosest: BlockquoteController['getClosest'] = editor => {
+    const { selection } = editor;
 
-export function createBlockquoteController(config: CreateBlockquoteControllerConfig): BlockquoteController {
-  const { type } = config;
-  const isBlockAs: BlockquoteController['isBlockAs'] = block => {
-    {
-      if (!block) {
-        return false;
-      }
-
-      return block.type === type;
-    }
-  };
-  const getCurrent: BlockquoteController['getCurrent'] = editor => {
-    const block = editor.value.startBlock as Block | null;
-
-    if (!block) {
+    if (!selection) {
       return null;
-    } else if (isBlockAs(block)) {
-      return block;
     }
 
-    const parent = editor.value.document.getParent(block.key) as Block | null;
-    return isBlockAs(parent) ? parent : null;
+    const nodeEntry = Editor.above(editor, {
+      match: isNodeAs,
+      mode: 'lowest'
+    });
+
+    return nodeEntry ? nodeEntry[0] : null;
   };
-  const isSelectionIn: BlockquoteController['isSelectionIn'] = editor => !!getCurrent(editor);
-  const wrap: BlockquoteController['wrap'] = editor => editor.wrapBlock(type);
-  const unwrap: BlockquoteController['unwrap'] = editor => editor.unwrapBlock(type);
-  const toggle: BlockquoteController['toggle'] = editor => (isSelectionIn(editor) ? unwrap(editor) : wrap(editor));
+  const isSelectionIn: BlockquoteController['isSelectionIn'] = editor => !!getClosest(editor);
+  const wrap: BlockquoteController['wrap'] = editor => {
+    const children = ArtiboxEditor.selectionFragment(editor);
+
+    if (children) {
+      const element: BlockquoteElement = { type, children };
+
+      Transforms.wrapNodes(editor, element, {
+        mode: 'lowest'
+      });
+    }
+  };
+  const unwrapBase = (editor: Editor, split: boolean) => {
+    const { selection } = editor;
+
+    if (selection) {
+      Transforms.unwrapNodes(editor, {
+        match: isNodeAs,
+        mode: 'lowest',
+        split
+      });
+    }
+  };
+  const unwrap: BlockquoteController['unwrap'] = editor => unwrapBase(editor, false);
+  const unwrapOnlySelection: BlockquoteController['unwrapOnlySelection'] = editor => unwrapBase(editor, true);
+  const toggle: BlockquoteController['toggle'] = editor => (isSelectionIn(editor) ? unwrap : wrap)(editor);
 
   return {
-    isBlockAs,
+    isNodeAs,
     isSelectionIn,
-    getCurrent,
+    getClosest,
     wrap,
     unwrap,
+    unwrapOnlySelection,
     toggle
   };
 }

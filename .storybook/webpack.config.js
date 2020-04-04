@@ -32,7 +32,16 @@ module.exports = ({ config }) => {
     {
       test: /\.s[ac]ss$/,
       include: [PACKAGES_PATH, STORIES_PATH],
-      use: ['style-loader', 'css-loader', 'sass-loader']
+      use: [
+        'style-loader',
+        'css-loader',
+        {
+          loader: 'sass-loader',
+          options: {
+            implementation: require('dart-sass')
+          }
+        }
+      ]
     }
   );
 

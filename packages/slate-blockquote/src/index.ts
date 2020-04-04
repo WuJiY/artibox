@@ -1,9 +1,3 @@
-export { BLOCKQUOTE_TYPE, BLOCKQUOTE_HOTKEY, BLOCKQUOTE_COMPONENT } from './constants';
-export {
-  BlockquoteForPluginConfig,
-  BlockquoteForToolHookConfig,
-  Blockquote,
-  CreatBlockquoteeConfig,
-  createBlockquote
-} from './blockquote';
-export { CreateBlockquoteJsxSerializerRuleConfig, createBlockquoteJsxSerializerRule } from './jsx-serializer';
+export { BLOCKQUOTE_TYPE, BLOCKQUOTE_HOTKEY } from './constants';
+export type { BlockquoteElement } from './typings';
+export { CreateBlockquoteConfig, Blockquote, createBlockquote } from './blockquote';

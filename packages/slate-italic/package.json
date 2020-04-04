@@ -25,8 +25,5 @@
     "build": "tsc --project ./tsconfig.app.json && tsc --project ./tsconfig.app.json -m esnext -outDir ./dist/esm",
     "postbuild": "node ../../tools/build/sync-dist-to-node_modules.js",
     "build:clean": "node ../../tools/build/clean.js"
-  },
-  "dependencies": {
-    "@artibox/slate-toggle-mark": "^0.2.0"
   }
 }

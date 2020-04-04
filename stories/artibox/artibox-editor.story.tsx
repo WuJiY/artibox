@@ -1,62 +1,93 @@
 import '@artibox/theme/artibox';
-import '@artibox/theme/artibox-dark';
 
-import React, { useState, useCallback } from 'react';
-import { OnChangeFn } from 'slate-react';
-import cx from 'classnames';
-import { createArtiboxEditor } from '@artibox/slate-editor';
-import { LocaleDefinition } from '@artibox/locale';
-import { enUS } from '@artibox/locale/en-US';
-import { zhTW } from '@artibox/locale/zh-TW';
-import { addThemeNamePrefix } from '@artibox/components/theme';
-import { initialValue } from './value';
-import { plugins } from './plugins';
-import ToggleButtons from './toggle-buttons';
+import React, { useState, useMemo } from 'react';
+import type { Node } from 'slate';
+import {
+  Bold as BoldIcon,
+  Italic as ItalicIcon,
+  Underline as UnderlineIcon,
+  Strikethrough as StrikethroughIcon,
+  Highlight as HighlightIcon,
+  Blockquote as BlockquoteIcon
+} from '@artibox/icons';
+import {
+  // composePlugins,
+  composeRenderElements,
+  composeRenderMarks,
+  composeHandlers,
+  createEditor,
+  Artibox,
+  Editable
+} from '@artibox/slate-react';
+import { Toolbar, ToolbarIcon } from '@artibox/slate-toolbar';
+import { createBold } from '@artibox/slate-bold';
+import { createItalic } from '@artibox/slate-italic';
+import { createUnderline } from '@artibox/slate-underline';
+import { createStrikethrough } from '@artibox/slate-strikethrough';
+import { createHighlight } from '@artibox/slate-highlight';
+import { createBlockquote } from '@artibox/slate-blockquote';
 
-const themes = [
-  { value: 'artibox', label: 'Light' },
-  { value: 'artibox-dark', label: 'Dark' }
-];
+const Bold = createBold();
+const Italic = createItalic();
+const Underline = createUnderline();
+const Strikethrough = createStrikethrough();
+const Highlight = createHighlight();
+const Blockquote = createBlockquote();
 
-const locales = [
-  { value: zhTW, label: '中文' },
-  { value: enUS, label: 'EN' }
-];
-
-const ArtiboxEditor = createArtiboxEditor({ plugins, defaultBlockComponent: 'p' });
-
-interface ArtiboxEditorWithStateProps {
-  theme?: string;
-  locale?: LocaleDefinition;
-}
-
-const ArtiboxEditorWithState = ({ theme, locale }: ArtiboxEditorWithStateProps) => {
-  const [value, setValue] = useState(initialValue);
-  const onChange = useCallback<OnChangeFn>(change => setValue(change.value), []);
-
-  return (
-    <ArtiboxEditor
-      className="artibox-stories-elements artibox-editor-story"
-      value={value}
-      onChange={onChange}
-      theme={theme}
-      locale={locale}
-    />
-  );
-};
+const renderElement = composeRenderElements({
+  [Blockquote.type]: Blockquote.defaultRenderElement
+});
+const renderMark = composeRenderMarks([
+  Bold.defaultRenderMark,
+  Italic.defaultRenderMark,
+  Underline.defaultRenderMark,
+  Strikethrough.defaultRenderMark,
+  Highlight.defaultRenderMark
+]);
+const composedHandlers = composeHandlers([
+  Bold.defaultHandlers,
+  Italic.defaultHandlers,
+  Underline.defaultHandlers,
+  Strikethrough.defaultHandlers,
+  Highlight.defaultHandlers,
+  Blockquote.defaultHandlers
+]);
 
 export function ArtiboxEditorStory() {
-  const [locale, setLocale] = useState(zhTW);
-  const [theme, setTheme] = useState('artibox');
+  const editor = useMemo(() => createEditor(), []);
+  const handlers = useMemo(() => composedHandlers(editor), [editor]);
+  const [value, setValue] = useState<Node[]>([
+    {
+      type: 'paragraph',
+      children: [{ text: 'A line of text in a paragraph.' }]
+    }
+  ]);
 
   return (
-    <>
-      <div className={cx('artibox-editor-story__settings', addThemeNamePrefix(theme))}>
-        <ToggleButtons value={theme} items={themes} onChange={setTheme} />
-        <ToggleButtons value={locale} items={locales} onChange={setLocale} />
-      </div>
-      <ArtiboxEditorWithState theme={theme} locale={locale} />
-    </>
+    <Artibox editor={editor} value={value} onChange={setValue}>
+      <Toolbar
+        renderCollapsed={() => (
+          <>
+            <Blockquote.Tool>{props => <ToolbarIcon icon={BlockquoteIcon} {...props} />}</Blockquote.Tool>
+          </>
+        )}
+        renderExpanded={() => (
+          <>
+            <Bold.Tool>{props => <ToolbarIcon icon={BoldIcon} {...props} />}</Bold.Tool>
+            <Italic.Tool>{props => <ToolbarIcon icon={ItalicIcon} {...props} />}</Italic.Tool>
+            <Underline.Tool>{props => <ToolbarIcon icon={UnderlineIcon} {...props} />}</Underline.Tool>
+            <Strikethrough.Tool>{props => <ToolbarIcon icon={StrikethroughIcon} {...props} />}</Strikethrough.Tool>
+            <Highlight.Tool>{props => <ToolbarIcon icon={HighlightIcon} {...props} />}</Highlight.Tool>
+          </>
+        )}
+      />
+      <Editable
+        className="artibox-stories-elements artibox-editor-story"
+        renderElement={renderElement}
+        renderMark={renderMark}
+        {...handlers}
+      />
+    </Artibox>
   );
 }
 

@@ -1,3 +1,3 @@
-export { TOOLBAR_DIVIDER } from './constants';
-export { Tool } from './typings';
-export { ToolbarForPluginConfig, Toolbar } from './toolbar';
+export { default as ToolbarDivider } from './components/toolbar-divider';
+export { default as ToolbarIcon } from './components/toolbar-icon';
+export { default as Toolbar } from './components/toolbar';

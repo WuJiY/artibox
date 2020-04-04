@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import cx from 'classnames';
+import clsx from 'clsx';
 import './styles';
 
 export interface ProgressProps {
@@ -16,7 +16,7 @@ const Progress = forwardRef<HTMLSpanElement, ProgressProps>(function Progress(pr
   };
 
   return (
-    <span ref={ref} className={cx('artibox-progress', className)}>
+    <span ref={ref} className={clsx('artibox-progress', className)}>
       <span className="artibox-progress__backdrop" />
       <span className="artibox-progress__track" style={style} />
     </span>

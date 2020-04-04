@@ -8,7 +8,7 @@ import React, {
   useCallback,
   useLayoutEffect
 } from 'react';
-import cx from 'classnames';
+import clsx from 'clsx';
 import { CSSTransition } from 'react-transition-group';
 import { CSSTransitionClassNames } from 'react-transition-group/CSSTransition';
 import Portal, { PortalProps } from '../Portal';
@@ -87,13 +87,13 @@ const Modal: FC<ModalProps> = ({
       <CSSTransition in={open} classNames={transitionClassNames} timeout={maskDelay} unmountOnExit={true}>
         <div
           ref={maskRef}
-          className={cx('artibox-modal__mask', theme, maskClassName)}
+          className={clsx('artibox-modal__mask', theme, maskClassName)}
           onClick={onMaskClick}
           onKeyPress={undefined}
           role="dialog"
           tabIndex={-1}
         >
-          <div className={cx('artibox-modal', className)}>
+          <div className={clsx('artibox-modal', className)}>
             <header className="artibox-modal__header">
               <div className="artibox-modal__title">{title}</div>
               <button onClick={onClose}>X</button>

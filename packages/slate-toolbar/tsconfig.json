@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "references": [{ "path": "../components" }, { "path": "../icons" }, { "path": "../slate-common" }],
+  "references": [{ "path": "../components" }, { "path": "../icons" }, { "path": "../slate-react" }],
   "include": ["./src"],
   "exclude": ["node_modules", "./**/*.test.*"]
 }

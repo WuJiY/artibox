@@ -1,12 +1,6 @@
 export {
-  ToggleMarkDefaultConfig,
-  ToggleMarkForPluginConfig,
-  ToggleMark,
+  CreateToggleMarkDefaultConfig,
   CreateToggleMarkConfig,
+  ToggleMark,
   createToggleMarkCreator
 } from './toggle-mark';
-export {
-  CreateToggleMarkJsxSerializerDefaultConfig,
-  CreateToggleMarkJsxSerializerRuleConfig,
-  createToggleMarkJsxSerializerRuleCreator
-} from './jsx-serializer';

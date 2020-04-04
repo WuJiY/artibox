@@ -1,14 +1,8 @@
 /**
- * Default type of bold.
+ * Default key of bold.
  */
-export const BOLD_TYPE = 'bold' as const;
-export type BOLD_TYPE = typeof BOLD_TYPE;
-
-/**
- * Default component of both renderer of editor and jsx serializer rule of bold.
- */
-export const BOLD_COMPONENT = 'strong';
-export type BOLD_COMPONENT = typeof BOLD_COMPONENT;
+export const BOLD_KEY = 'bold' as const;
+export type BOLD_KEY = typeof BOLD_KEY;
 
 /**
  * Default hotkey for toggling bold.

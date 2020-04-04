@@ -1,85 +1,74 @@
-import { Editor } from 'slate';
-import { Plugin } from 'slate-react';
+import { Transforms, Node, Range, Editor } from 'slate';
 import { isHotkey } from 'is-hotkey';
-import { Hotkey } from '@artibox/slate-common';
-import { PARAGRAPH_TYPE } from '@artibox/slate-common/constants/paragraph';
-import { BlockquoteController } from './controller';
+//import { PARAGRAPH_TYPE } from '@artibox/slate-common/constants/paragraph';
+import { ArtiboxElement } from '@artibox/slate-common/element';
+import type { Hotkey, Handlers, DomHandlers } from '@artibox/slate-react';
+import type { BlockquoteController } from './controller';
 
-/**
- * @property hotkey - Toggle blockquote while the hotkey pressed.
- */
-export interface CreateBlockquoteHandlersConfig extends Hotkey {
-  controller: BlockquoteController;
-}
+export function createBlockquoteHandlers(controller: BlockquoteController, hotkey: Hotkey): Handlers {
+  const handlers: Handlers = editor => {
+    /**
+     * The handler of soft break.
+     */
+    const onSoftBreak: DomHandlers['onKeyDown'] = event => {
+      const blockquoteElement = controller.getClosest(editor);
 
-export function createBlockquoteHandlers(config: CreateBlockquoteHandlersConfig): Plugin {
-  const { hotkey, controller } = config;
-
-  /**
-   * The handler of soft break.
-   */
-  const onSoftBreak: Plugin['onKeyDown'] = (event, editorComponent, next) => {
-    const editor = (editorComponent as any) as Editor;
-    const blockquoteBlock = controller.getCurrent(editor);
-
-    if (!blockquoteBlock) {
-      return next();
-    }
-
-    event.preventDefault();
-
-    return editor.splitBlock().setBlocks(PARAGRAPH_TYPE);
-  };
-
-  /**
-   * If the focused block inside blockquote is w/o any texts, unwrap the focused block.
-   */
-  const onEnter: Plugin['onKeyDown'] = (event, editorComponent, next) => {
-    const editor = (editorComponent as any) as Editor;
-    const blockquoteBlock = controller.getCurrent(editor);
-    const currentBlock = editor.value.startBlock;
-
-    if (!blockquoteBlock || currentBlock.text.length !== 0) {
-      return next();
-    }
-
-    event.preventDefault();
-
-    return controller.unwrap(editor);
-  };
-
-  /**
-   * If the focused block inside blockquote and the selection is not expanded, unwrap the focused block.
-   */
-  const onBackSpace: Plugin['onKeyDown'] = (event, editorComponent, next) => {
-    const editor = (editorComponent as any) as Editor;
-    const blockquoteBlock = controller.getCurrent(editor);
-    const { isExpanded, start } = editor.value.selection;
-
-    if (!blockquoteBlock || isExpanded || start.offset !== 0) {
-      return next();
-    }
-
-    event.preventDefault();
-
-    return controller.unwrap(editor);
-  };
-
-  return {
-    onKeyDown(event, editor, next) {
-      if (event.key === 'Enter') {
-        if (event.shiftKey) {
-          return onSoftBreak(event, editor, next);
-        }
-
-        return onEnter(event, editor, next);
-      } else if (event.key === 'Backspace') {
-        return onBackSpace(event, editor, next);
-      } else if (isHotkey(hotkey, event as any)) {
-        return controller.toggle((editor as any) as Editor);
+      if (blockquoteElement) {
+        event.preventDefault();
+        Transforms.splitNodes(editor, {
+          match: ArtiboxElement.isParagraphElement,
+          mode: 'highest',
+          always: true
+        });
       }
+    };
 
-      return next();
-    }
+    /**
+     * If the focused block inside blockquote is w/o any texts, unwrap the focused block.
+     */
+    const onEnter: DomHandlers['onKeyDown'] = event => {
+      const { selection } = editor;
+      const blockquoteElement = controller.getClosest(editor);
+
+      if (blockquoteElement && selection) {
+        const [node] = Editor.first(editor, selection);
+
+        if (!Node.string(node).length) {
+          event.preventDefault();
+          controller.unwrapOnlySelection(editor);
+        }
+      }
+    };
+
+    /**
+     * If the focused block inside blockquote and the selection is not expanded, unwrap the focused block.
+     */
+    const onBackSpace: DomHandlers['onKeyDown'] = event => {
+      const { selection } = editor;
+
+      if (
+        controller.isSelectionIn(editor) &&
+        selection &&
+        Range.isCollapsed(selection) &&
+        selection.focus.offset === 0
+      ) {
+        event.preventDefault();
+        controller.unwrapOnlySelection(editor);
+      }
+    };
+
+    return {
+      onKeyDown(event) {
+        if (event.key === 'Enter') {
+          (event.shiftKey ? onSoftBreak : onEnter)(event);
+        } else if (event.key === 'Backspace') {
+          onBackSpace(event);
+        } else if (isHotkey(hotkey, event as any)) {
+          controller.toggle(editor);
+        }
+      }
+    };
   };
+
+  return handlers;
 }

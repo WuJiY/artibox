@@ -1,14 +1,8 @@
 /**
- * Default type of highlight.
+ * Default key of highlight.
  */
-export const HIGHLIGHT_TYPE = 'highlight' as const;
-export type HIGHLIGHT_TYPE = typeof HIGHLIGHT_TYPE;
-
-/**
- * Default component of both renderer of editor and jsx serializer rule of highlight.
- */
-export const HIGHLIGHT_COMPONENT = 'mark';
-export type HIGHLIGHT_COMPONENT = typeof HIGHLIGHT_COMPONENT;
+export const HIGHLIGHT_KEY = 'highlight' as const;
+export type HIGHLIGHT_KEY = typeof HIGHLIGHT_KEY;
 
 /**
  * Default hotkey for toggling highlight.

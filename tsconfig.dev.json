@@ -9,7 +9,7 @@
       "@artibox/slate-blockquote/*": ["./packages/slate-blockquote/src/*"],
       "@artibox/slate-bold/*": ["./packages/slate-bold/src/*"],
       "@artibox/slate-common/*": ["./packages/slate-common/src/*"],
-      "@artibox/slate-editor/*": ["./packages/slate-editor/src/*"],
+      "@artibox/slate-react/*": ["./packages/slate-react/src/*"],
       "@artibox/slate-facebook/*": ["./packages/slate-facebook/src/*"],
       "@artibox/slate-file-uploader/*": ["./packages/slate-file-uploader/src/*"],
       "@artibox/slate-heading/*": ["./packages/slate-heading/src/*"],

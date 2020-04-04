@@ -5,7 +5,7 @@ export type ThemeContext = typeof ThemeContext;
 
 export interface ThemeProviderProps {
   theme?: string;
-  children: ReactNode | ((theme: string) => ReactNode);
+  children: ReactNode;
 }
 
 /**
@@ -18,11 +18,7 @@ export function addThemeNamePrefix(theme?: string) {
 export function ThemeProvider({ theme, children }: ThemeProviderProps) {
   const themeName = addThemeNamePrefix(theme);
 
-  return (
-    <ThemeContext.Provider value={themeName}>
-      {typeof children === 'function' ? children(themeName) : children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={themeName}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
